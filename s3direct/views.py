@@ -9,6 +9,8 @@ from .utils import create_upload_data, get_s3direct_destinations
 @require_POST
 def get_upload_params(request):
     content_type = request.POST['type']
+    width = request.POST.get('width', None)
+    height = request.POST.get('height', None)
     filename = request.POST['name']
 
     dest = get_s3direct_destinations().get(request.POST['dest'])
@@ -26,6 +28,8 @@ def get_upload_params(request):
     content_disposition = dest.get('content_disposition')
     content_length_range = dest.get('content_length_range')
     server_side_encryption = dest.get('server_side_encryption')
+    width_exact = dest.get('width_exact')
+    height_exact = dest.get('height_exact')
 
     if not acl:
         acl = 'public-read'
@@ -37,6 +41,14 @@ def get_upload_params(request):
     if auth and not auth(request.user):
         data = json.dumps({'error': 'Permission denied.'})
         return HttpResponse(data, content_type="application/json", status=403)
+
+    if width and width_exact and str(width) != str(width_exact):
+        data = json.dumps({'error': 'Invalid width - must equal (%s).' % width_exact})
+        return HttpResponse(data, content_type="application/json", status=400)
+
+    if height and height_exact and str(height) != str(height_exact):
+        data = json.dumps({'error': 'Invalid height - must equal (%s).' % height_exact})
+        return HttpResponse(data, content_type="application/json", status=400)
 
     if (allowed and content_type not in allowed) and allowed != '*':
         data = json.dumps({'error': 'Invalid file type (%s).' % content_type})

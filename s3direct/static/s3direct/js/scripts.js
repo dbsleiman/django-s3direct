@@ -137,21 +137,37 @@
         form.append('name', file.name)
         form.append('dest', dest)
 
-        request('POST', url, form, headers, el, false, function(status, json){
-            var data = parseJson(json)
-
-            switch(status) {
-                case 200:
-                    upload(file, data, el)
-                    break
-                case 400:
-                case 403:
-                    error(el, data.error)
-                    break;
-                default:
-                    error(el, 'Sorry, could not get upload URL.')
+        // check if file is image and send size if it is
+        if (file.type.indexOf('image') != -1) {
+            var img = new Image;
+            img.onload = function() {
+                form.append('width', img.width)
+                form.append('height', img.height)
+                sendRequest()
             }
-        })
+
+            img.src = URL.createObjectURL(file);
+        } else {
+            sendRequest()
+        }
+
+        function sendRequest() {
+            request('POST', url, form, headers, el, false, function(status, json){
+                var data = parseJson(json)
+
+                switch(status) {
+                    case 200:
+                        upload(file, data, el)
+                        break
+                    case 400:
+                    case 403:
+                        error(el, data.error)
+                        break;
+                    default:
+                        error(el, 'Sorry, could not get upload URL.')
+                }
+            })
+        }
     }
 
     var removeUpload = function(e) {

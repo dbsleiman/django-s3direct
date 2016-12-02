@@ -47,6 +47,8 @@ def get_s3direct_destinations():
         5: 'cache_control',
         6: 'content_disposition',
         7: 'server_side_encryption',
+        8: 'width_exact',
+        9: 'height_exact',
     }
     if destinations:
         for dest, dest_value in destinations.items():
